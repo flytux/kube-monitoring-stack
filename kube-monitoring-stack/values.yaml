@@ -19,6 +19,36 @@ grafana:
         type: prometheus
         url: http://k8s-monitoring-mimir-nginx.monitoring.svc:80/prometheus
         editable: true
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: 'default'
+        orgId: 1
+        folder: 'default'
+        type: file
+        disableDeletion: true
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/standard
+  dashboards:
+    default:
+      k8s_global:
+        gnetId: 15757
+        revision: 1
+        datasource: Mimir
+      k8s_nodes:
+        gnetId: 15759
+        revision: 1
+        datasource: Mimir  
+      k8s_namespaces:
+        gnetId: 15758
+        revision: 1
+        datasource: Mimir
+      k8s_pods:
+        gnetId: 15760
+        revision: 1
+        datasource: Mimir
 
 prometheus:
   server:
@@ -29,3 +59,6 @@ prometheus:
         - prometheus.local
     remoteWrite:
       - url: http://k8s-monitoring-mimir-nginx.monitoring.svc:80/api/v1/push
+    global:
+      external_labels:
+        cluster: kw-local

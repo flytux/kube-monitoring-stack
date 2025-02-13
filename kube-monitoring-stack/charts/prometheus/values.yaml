@@ -762,7 +762,8 @@ server:
 ## Prometheus server ConfigMap entries for rule files (allow prometheus labels interpolation)
 ruleFiles: {}
 
-## Prometheus server ConfigMap entries for scrape_config_files
+## Prometheus 
+server ConfigMap entries for scrape_config_files
 ## (allows scrape configs defined in additional files)
 ##
 scrapeConfigFiles: []
