@@ -1,0 +1,20 @@
+adminPassword: password!@#$
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  hosts:
+    - grafana.local
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server.monitoring:80      
+      isDefault: true
+      editable: true
+    - name: Mimir
+      type: prometheus
+      url: http://mimir-nginx.monitoring.svc:80/prometheus
+      editable: true
