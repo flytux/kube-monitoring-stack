@@ -763,7 +763,7 @@ server:
 ruleFiles: {}
 
 ## Prometheus 
-server ConfigMap entries for scrape_config_files
+## server ConfigMap entries for scrape_config_files
 ## (allows scrape configs defined in additional files)
 ##
 scrapeConfigFiles: []

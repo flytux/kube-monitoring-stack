@@ -5,7 +5,6 @@ grafana:
     ingressClassName: traefik
     hosts:
       - grafana.local
-
   datasources:
     datasources.yaml:
       apiVersion: 1
@@ -49,7 +48,6 @@ grafana:
         gnetId: 15760
         revision: 1
         datasource: Mimir
-
 prometheus:
   server:
     ingress:
