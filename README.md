@@ -2,7 +2,7 @@
 
 kubernetes cluster 모니터링
 ---
-#### 1) 프로메테우스 메트릭 - Mimir 저장 환경경
+#### 1) 프로메테우스 메트릭 - Mimir 저장 환경
 - ~~kube-state-metrics install (helm chart)~~
 - ~~node-exporter install (helm chart)~~
 - 프로메테우스 helm charts의 kube-state-metric, node-exporter와 기본 수집 메트릭 설정 적용
