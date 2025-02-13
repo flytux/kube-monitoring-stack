@@ -31,10 +31,32 @@ kubernetes cluster 모니터링
       editable: true
     ```
 --- 
-#### 2) 클러스터 모니터링 대시보드 (TBD)
+#### 2) 클러스터 모니터링 대시보드 
 - 클러스터 정보 : 버전, 노드 수 , CPU, 메모리, 디스크, 평균 사용량
 - 네임스페이스 수, 목록, 디플로이먼트, 스테이트풀셋, 데몬셋 정보
 - 서비스, Ingress 정보
+
+  ```
+  # https://github.com/dotdc/grafana-dashboards-kubernetes
+  dashboards:
+    default:
+      k8s_global:
+        gnetId: 15757
+        revision: 1
+        datasource: Mimir
+      k8s_nodes:
+        gnetId: 15759
+        revision: 1
+        datasource: Mimir  
+      k8s_namespaces:
+        gnetId: 15758
+        revision: 1
+        datasource: Mimir
+      k8s_pods:
+        gnetId: 15760
+        revision: 1
+        datasource: Mimir
+  ```
 ---
 #### 3) Opentelemetry Collector - Mimir 메트릭 수집 구성 (Working)
 - Opentelemetry를 이용한 메트릭 수집 설정
