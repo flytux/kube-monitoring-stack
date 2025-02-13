@@ -1,1 +1,1 @@
-# k8s-monitoring-stack
+# kube-monitoring-stack
