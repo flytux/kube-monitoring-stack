@@ -1,8 +1,0 @@
-server:
-  ingress:
-    enabled: true
-    ingressClassName: traefik
-    hosts:
-      - prometheus.local
-  remoteWrite:
-    - url: http://mimir-nginx.monitoring.svc:80/api/v1/push
