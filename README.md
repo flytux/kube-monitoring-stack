@@ -61,3 +61,41 @@ kubernetes cluster 모니터링
 ---
 #### 3) Opentelemetry Collector - Mimir 메트릭 수집 구성 (Working)
 - Opentelemetry를 이용한 메트릭 수집 설정
+  - Opentelemtry Connector helm chart 추가 (chats/opentelemetry-collector)
+  - Mimir 엔드포인트 설정
+  ```
+  config:
+    exporters:
+      debug:
+        verbosity: detailed
+      otlphttp:
+        endpoint: http://k8s-monitoring-mimir-nginx.monitoring.svc:80/otlp
+  ```
+  - OTLP receiver 설정
+
+- Loki, Tempo 저장소 구성
+  - loki 추가 - loki-simple-scalable
+  - mimir-distributed/minio bucket create 추가
+  ```
+    loki:
+    auth_enabled: false
+    storage:
+      bucketNames:
+        chunks: loki-chunks
+        ruler: loki-ruler
+        admin: loki-admin
+      type: s3
+      s3:      
+        endpoint: http://k8s-monitoring-minio:9000
+        secretAccessKey: console123
+        accessKeyId: console
+        s3ForcePathStyle: true
+        insecure: true
+  ```
+
+  - temp chart 추가
+  - 그라파나 Datassource 설정
+  - Trace ID - Exemplar 연동 구성
+  - Opentelemetry Connector와 연동 구성
+
+  
