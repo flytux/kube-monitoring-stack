@@ -60,3 +60,137 @@ prometheus:
     global:
       external_labels:
         cluster: kw-local
+
+mimir-distributed:
+  minio:
+    consoleIngress:
+      enabled: true
+      ingressClassName: traefik
+      hosts:
+        - minio.local
+    buckets: 
+      - name: loki-admin
+        policy: none
+        purge: false
+        versioning: false
+        objectlocking: false
+      - name: loki-chunks
+        policy: none
+        purge: false
+        versioning: false
+        objectlocking: false
+      - name: loki-ruler
+        policy: none
+        purge: false
+        versioning: false
+        objectlocking: false
+
+loki-simple-scalable:
+  nameOverride: k8s-monitoring-loki
+  loki:
+    auth_enabled: false
+    storage:
+      bucketNames:
+        chunks: loki-chunks
+        ruler: loki-ruler
+        admin: loki-admin
+      type: s3
+      s3:      
+        endpoint: http://k8s-monitoring-minio:9000
+        secretAccessKey: console123
+        accessKeyId: console
+        s3ForcePathStyle: true
+        insecure: true
+      local:
+        chunks_directory: /var/loki/chunks
+        rules_directory: /var/loki/rules
+    storage_config:
+      hedging:
+        at: "250ms"
+        max_per_second: 20
+        up_to: 3
+  monitoring:
+    dashboards:
+      enabled: true
+    selfMonitoring:
+      enabled: false
+      grafanaAgent:
+        installOperator: false
+  write:
+    replicas: 1
+  read:
+    replicas: 1
+  gateway:
+    enabled: true
+    replicas: 1
+
+opentelemetry-collector:
+  # Valid values are "daemonset", "deployment", and "statefulset".
+  mode: "deployment"
+  presets:
+    kubernetesEvents:
+      enabled: true
+  config:
+    exporters:
+      debug:
+        verbosity: detailed
+      otlphttp:
+        endpoint: http://k8s-monitoring-mimir-nginx.monitoring.svc:80/otlp
+    processors:
+      batch: {}
+      memory_limiter:
+        check_interval: 5s
+        limit_percentage: 80
+        spike_limit_percentage: 25
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${env:MY_POD_IP}:4317
+          http:
+            endpoint: ${env:MY_POD_IP}:4318
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: opentelemetry-collector
+              scrape_interval: 10s
+              static_configs:
+                - targets:
+                    - ${env:MY_POD_IP}:8888
+    service:
+      telemetry:
+        metrics:
+          address: ${env:MY_POD_IP}:8888
+      extensions:
+        - health_check
+      pipelines:
+        logs:
+          exporters:
+            - debug
+          processors:
+            - memory_limiter
+            - batch
+          receivers:
+            - otlp
+        metrics:
+          exporters:
+            - debug
+            - otlphttp
+          processors:
+            - memory_limiter
+            - batch
+          receivers:
+            - otlp
+            - prometheus
+        traces:
+          exporters:
+            - debug
+          processors:
+            - memory_limiter
+            - batch
+          receivers:
+            - otlp
+
+  image:
+    # If you want to use the core image `otel/opentelemetry-collector`, you also need to change `command.name` value to `otelcol`.
+    repository: "otel/opentelemetry-collector-k8s"

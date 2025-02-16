@@ -22,3 +22,9 @@ dependencies:
   tags:
   - mimir-distributed
   version: 5.x.x
+- name: loki-simple-scalable
+  repository: file://./charts
+  tags:
+  - loki-simple-scalable
+  version: 1.x.x
+
