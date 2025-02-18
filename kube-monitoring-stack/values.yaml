@@ -18,6 +18,15 @@ grafana:
         type: prometheus
         url: http://k8s-monitoring-mimir-nginx.monitoring.svc:80/prometheus
         editable: true
+      - name: Loki
+        type: loki
+        url: http://k8s-monitoring-loki-distributed-gateway
+        editable: true
+      - name: Tempo
+        type: tempo
+        url: http://k8s-monitoring-k8s-monitoring-tempo:3100
+        editable: true
+
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
@@ -69,60 +78,60 @@ mimir-distributed:
       hosts:
         - minio.local
     buckets: 
-      - name: loki-admin
+      - name: loki-store
         policy: none
         purge: false
         versioning: false
         objectlocking: false
-      - name: loki-chunks
+      - name: tempo-store
         policy: none
         purge: false
         versioning: false
         objectlocking: false
-      - name: loki-ruler
+      - name: mimir-tsdb
         policy: none
         purge: false
-        versioning: false
-        objectlocking: false
+      - name: mimir-ruler
+        policy: none
+        purge: false
+      - name: enterprise-metrics-tsdb
+        policy: none
+        purge: false
+      - name: enterprise-metrics-admin
+        policy: none
+        purge: false
+      - name: enterprise-metrics-ruler
+        policy: none
+        purge: false
 
-loki-simple-scalable:
-  nameOverride: k8s-monitoring-loki
+loki-distributed:
   loki:
-    auth_enabled: false
-    storage:
-      bucketNames:
-        chunks: loki-chunks
-        ruler: loki-ruler
-        admin: loki-admin
-      type: s3
-      s3:      
-        endpoint: http://k8s-monitoring-minio:9000
-        secretAccessKey: console123
-        accessKeyId: console
-        s3ForcePathStyle: true
-        insecure: true
-      local:
-        chunks_directory: /var/loki/chunks
-        rules_directory: /var/loki/rules
-    storage_config:
-      hedging:
-        at: "250ms"
-        max_per_second: 20
-        up_to: 3
-  monitoring:
-    dashboards:
+    storageConfig:
+      boltdb_shipper:
+        active_index_directory: /var/loki/index
+        cache_location: /var/loki/index_cache
+        resync_interval: 5s
+        shared_store: s3
+      aws:
+        s3: http://console:console123@k8s-monitoring-minio:9000/loki-store
+        s3forcepathstyle: true
+
+tempo:
+  nameOverride: "k8s-monitoring-tempo"
+  tempo:
+    metricsGenerator:
       enabled: true
-    selfMonitoring:
-      enabled: false
-      grafanaAgent:
-        installOperator: false
-  write:
-    replicas: 1
-  read:
-    replicas: 1
-  gateway:
-    enabled: true
-    replicas: 1
+      remoteWriteUrl: "http://k8s-monitoring-mimir-nginx.monitoring.svc:80/api/v1/push"
+    storage:
+      trace:
+        backend: s3
+        s3:
+          bucket: tempo-store                        # store traces in this bucket
+          endpoint: "k8s-monitoring-minio:9000"  # api endpoint
+          access_key: console                                 # optional. access key when using static credentials.
+          secret_key: console123                             # optional. secret key when using static credentials.
+          insecure: true
+          forcepathstyle: true                                 # optional. enable if endpoint is http\
 
 opentelemetry-collector:
   # Valid values are "daemonset", "deployment", and "statefulset".
