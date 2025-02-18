@@ -93,8 +93,33 @@ kubernetes cluster 모니터링
         insecure: true
   ```
 
-  - temp chart 추가
+  - temp chart 추가 : temp chart
+  - metric generation > mimir 로 저장
+  - s3 bucket tempo-store에 데이터 저장
+  ```
+  tempo:
+    nameOverride: "k8s-monitoring-tempo"
+    tempo:
+      metricsGenerator:
+        enabled: true
+        remoteWriteUrl: "http://k8s-monitoring-mimir-nginx.monitoring.svc:80/api/v1/push"
+      storage:
+        trace:
+          backend: s3
+          s3:
+            bucket: tempo-store   
+            endpoint: "k8s-monitoring-minio:9000"  # http:// 제외해야 정상 동작
+            access_key: console 
+            secret_key: console123
+            insecure: true
+            forcepathstyle: true       
+  ```
+
   - 그라파나 Datassource 설정
+    - loki: http://k8s-monitoring-loki-distributed-gateway
+    - tempo: http://k8s-monitoring-k8s-monitoring-tempo:3100
+    - mimir: http://k8s-monitoring-mimir-nginx.monitoring.svc:80/prometheus
+    - prometheus: http://k8s-monitoring-prometheus-server.monitoring:80
   - Trace ID - Exemplar 연동 구성
   - Opentelemetry Connector와 연동 구성
 
