@@ -11,21 +11,55 @@ grafana:
       datasources:
       - name: Prometheus
         type: prometheus
+        uid: prometheus
         url: http://k8s-monitoring-prometheus-server.monitoring:80      
         isDefault: true
         editable: true
       - name: Mimir
         type: prometheus
+        uid: mimir
         url: http://k8s-monitoring-mimir-nginx.monitoring.svc:80/prometheus
         editable: true
+        jsonData:
+          timeInterval: 60s
+          exemplarTraceIdDestinations:
+            - name: trace_id
+              datasourceUid: tempo
+              urlDisplayLabel: "Trace: $${__value.raw}"
       - name: Loki
         type: loki
+        uid: loki
         url: http://k8s-monitoring-loki-gateway
         editable: true
+        jsonData:
+          derivedFields:
+            - name: "trace_id"
+              matcherType: "label"
+              matcherRegex: "trace_id"
+              url: "$${__value.raw}"
+              datasourceUid: "tempo"
+              urlDisplayLabel: "Trace: $${__value.raw}"
       - name: Tempo
         type: tempo
+        uid: tempo
         url: http://k8s-monitoring-k8s-monitoring-tempo:3100
         editable: true
+        jsonData:
+          tracesToLogsV2:
+            customQuery: true
+            datasourceUid: "loki"
+            query: '{$${__tags}} | trace_id = "$${__trace.traceId}"'
+            tags:
+              - key: "service.name"
+                value: "service_name"
+          serviceMap:
+            datasourceUid: "prometheus"
+          search:
+            hide: false
+          nodeGraph:
+            enabled: true
+          lokiSearch:
+            datasourceUid: "loki"
 
   dashboardProviders:
     dashboardproviders.yaml:
@@ -78,7 +112,17 @@ mimir-distributed:
       hosts:
         - minio.local
     buckets: 
-      - name: loki-store
+      - name: chunks
+        policy: none
+        purge: false
+        versioning: false
+        objectlocking: false
+      - name: ruler
+        policy: none
+        purge: false
+        versioning: false
+        objectlocking: false
+      - name: admin
         policy: none
         purge: false
         versioning: false
@@ -114,12 +158,12 @@ tempo:
       trace:
         backend: s3
         s3:
-          bucket: tempo-store                        # store traces in this bucket
-          endpoint: "k8s-monitoring-minio:9000"  # api endpoint
-          access_key: console                                 # optional. access key when using static credentials.
-          secret_key: console123                             # optional. secret key when using static credentials.
+          bucket: tempo-store
+          endpoint: "k8s-monitoring-minio:9000"  
+          access_key: console                   
+          secret_key: console123               
           insecure: true
-          forcepathstyle: true                                 # optional. enable if endpoint is http\
+          forcepathstyle: true                
 
 opentelemetry-collector:
   # Valid values are "daemonset", "deployment", and "statefulset".
