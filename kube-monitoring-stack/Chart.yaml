@@ -22,10 +22,10 @@ dependencies:
   tags:
   - mimir-distributed
   version: 5.x.x
-- name: loki-distributed
+- name: loki
   repository: file://./charts
   tags:
-  - loki-distributed
+  - loki
   version: 1.x.x
 - name: tempo
   repository: file://./charts

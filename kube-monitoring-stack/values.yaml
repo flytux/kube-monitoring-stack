@@ -20,7 +20,7 @@ grafana:
         editable: true
       - name: Loki
         type: loki
-        url: http://k8s-monitoring-loki-distributed-gateway
+        url: http://k8s-monitoring-loki-gateway
         editable: true
       - name: Tempo
         type: tempo
@@ -104,18 +104,6 @@ mimir-distributed:
         policy: none
         purge: false
 
-loki-distributed:
-  loki:
-    storageConfig:
-      boltdb_shipper:
-        active_index_directory: /var/loki/index
-        cache_location: /var/loki/index_cache
-        resync_interval: 5s
-        shared_store: s3
-      aws:
-        s3: http://console:console123@k8s-monitoring-minio:9000/loki-store
-        s3forcepathstyle: true
-
 tempo:
   nameOverride: "k8s-monitoring-tempo"
   tempo:
@@ -145,6 +133,10 @@ opentelemetry-collector:
         verbosity: detailed
       otlphttp:
         endpoint: http://k8s-monitoring-mimir-nginx.monitoring.svc:80/otlp
+      otlphttp/loki:
+        endpoint: http://k8s-monitoring-loki-gateway.monitoring.svc:80/otlp
+      otlphttp/traces:
+        endpoint: http://k8s-monitoring-k8s-monitoring-tempo.monitoring.svc:4318
     processors:
       batch: {}
       memory_limiter:
@@ -176,6 +168,7 @@ opentelemetry-collector:
         logs:
           exporters:
             - debug
+            - otlphttp/loki
           processors:
             - memory_limiter
             - batch
@@ -194,6 +187,7 @@ opentelemetry-collector:
         traces:
           exporters:
             - debug
+            - otlphttp/traces
           processors:
             - memory_limiter
             - batch
@@ -203,3 +197,26 @@ opentelemetry-collector:
   image:
     # If you want to use the core image `otel/opentelemetry-collector`, you also need to change `command.name` value to `otelcol`.
     repository: "otel/opentelemetry-collector-k8s"
+
+loki:
+  deploymentMode: SimpleScalable
+  loki:
+    auth_enabled: false
+    useTestSchema: true
+    storage:
+      bucketNames:
+        chunks: chunks
+        ruler: ruler
+        admin: admin
+      type: s3
+      s3:
+        s3ForcePathStyle: true
+        insecure: true
+  backend:
+    replicas: 1
+  read:
+    replicas: 1
+  write:
+    replicas: 3
+  chunksCache:
+    enabled: false
