@@ -5,7 +5,7 @@
 - trace id를 통해 각 정보를 입체적으로 연계하여 확인
 - 오픈텔레메트리 에이전트는 오퍼레이터를 통해 애플리케이션에 자동 주입되고
 - 애플리케이션 정보는 Mimir, Loki, Tempo에 저장
-- 각 저장소는 확장 가능하도록 minio s3 백엔드로 구성
+- 각 저장소는 확장 chart가능하도록 minio s3 백엔드로 구성
 ```
 
 ---
@@ -14,10 +14,21 @@
 - 프로메테우스 helm charts의 kube-state-metric, node-exporter와 기본 수집 메트릭 설정 적용
 - prometheus install (node-exporter, state-metrics, mimir remote push 설정)
 - mimir 설치, 프로메테우스 push 설정
+- mimir charts 내 minio을 이용한 bucket 생성
+- mimir config exemplar 설정 추가 : structuredConfig
    ```
    # prometheus.yaml
    remoteWrite:
      - url: http://mimir-nginx.monitoring.svc:80/api/v1/push
+
+    mimir-distributed:
+      mimir:
+        structuredConfig:
+          limits:
+            max_cache_freshness: 10m
+            max_query_parallelism: 240
+            max_total_query_length: 12000h
+            max_global_exemplars_per_user: 100000 # enable exemplar
    ```
 - grafana install (메트릭 확인용)
    ```
@@ -131,7 +142,6 @@
             insecure: true
             forcepathstyle: true       
   ```
-집
 #### 6) 그라파나 Datassource 설정
     - loki: http://k8s-monitoring-loki-distributed-gateway
     - tempo: http://k8s-monitoring-k8s-monitoring-tempo:3100
