@@ -1,8 +1,11 @@
-### Install monitoring chart 
+### K8S 모니터링 차트 설치
 
+---
 
 ```
-# need default storage class for sts
+# 기본 스토리지 클래스 설정 필요
+# k8s-monitoring 으로 release 이름 변경 없이 구성
+# prometheus, mimir, minio, loki, tempo, grafana, opentelemetry collector로 구성
 
 helm upgrade -i k8s-monitoring . -n monitoring --create-namespace
 ```
