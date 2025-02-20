@@ -105,6 +105,13 @@ prometheus:
         cluster: kw-local
 
 mimir-distributed:
+  mimir:
+    structuredConfig:
+      limits:
+        max_cache_freshness: 10m
+        max_query_parallelism: 240
+        max_total_query_length: 12000h
+        max_global_exemplars_per_user: 100000
   minio:
     consoleIngress:
       enabled: true
