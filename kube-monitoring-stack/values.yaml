@@ -29,7 +29,7 @@ grafana:
       - name: Loki
         type: loki
         uid: loki
-        url: http://k8s-monitoring-loki-gateway
+        url: http://k8s-monitoring-k8s-monitoring-loki-gateway
         editable: true
         jsonData:
           derivedFields:
@@ -53,7 +53,7 @@ grafana:
               - key: "service.name"
                 value: "service_name"
           serviceMap:
-            datasourceUid: "prometheus"
+            datasourceUid: "mimir"
           search:
             hide: false
           nodeGraph:
@@ -165,6 +165,53 @@ tempo:
           insecure: true
           forcepathstyle: true                
 
+  config: |
+      memberlist:
+        cluster_label: "{{ .Release.Name }}.{{ .Release.Namespace }}"
+      multitenancy_enabled: {{ .Values.tempo.multitenancyEnabled }}
+      usage_report:
+        reporting_enabled: {{ .Values.tempo.reportingEnabled }}
+      compactor:
+        compaction:
+          block_retention: {{ .Values.tempo.retention }}
+      distributor:
+        receivers:
+          {{- toYaml .Values.tempo.receivers | nindent 8 }}
+      ingester:
+        {{- toYaml .Values.tempo.ingester | nindent 6 }}
+      server:
+        {{- toYaml .Values.tempo.server | nindent 6 }}
+      storage:
+        {{- toYaml .Values.tempo.storage | nindent 6 }}
+      querier:
+        {{- toYaml .Values.tempo.querier | nindent 6 }}
+      query_frontend:
+        {{- toYaml .Values.tempo.queryFrontend | nindent 6 }}
+      overrides:
+        {{- toYaml .Values.tempo.global_overrides | nindent 6 }}
+        {{- if .Values.tempo.metricsGenerator.enabled }}
+            metrics_generator_processors:
+            - 'service-graphs'
+            - 'local-blocks'
+            - 'span-metrics'
+      metrics_generator:
+            processor:
+              local_blocks:
+                filter_server_spans: false
+              span_metrics:
+                dimensions:
+                  - service_name
+                  - operation
+                  - status_code
+            traces_storage:
+              path: /tmp/tempo/generator/traces
+            storage:
+              path: "/tmp/tempo/generator/wal"
+              remote_write:
+                - url: {{ .Values.tempo.metricsGenerator.remoteWriteUrl }}
+                  send_exemplars: true
+        {{- end }}
+
 opentelemetry-collector:
   # Valid values are "daemonset", "deployment", and "statefulset".
   mode: "deployment"
@@ -178,7 +225,7 @@ opentelemetry-collector:
       otlphttp:
         endpoint: http://k8s-monitoring-mimir-nginx.monitoring.svc:80/otlp
       otlphttp/loki:
-        endpoint: http://k8s-monitoring-loki-gateway.monitoring.svc:80/otlp
+        endpoint: http://k8s-monitoring-k8s-monitoring-loki-gateway.monitoring.svc:80/otlp
       otlphttp/traces:
         endpoint: http://k8s-monitoring-k8s-monitoring-tempo.monitoring.svc:4318
     processors:
@@ -243,6 +290,7 @@ opentelemetry-collector:
     repository: "otel/opentelemetry-collector-k8s"
 
 loki:
+  nameOverride: "k8s-monitoring-loki"
   deploymentMode: SimpleScalable
   loki:
     auth_enabled: false
