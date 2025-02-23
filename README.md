@@ -8,6 +8,11 @@
 - 각 저장소는 확장 chart가능하도록 minio s3 백엔드로 구성
 ```
 
+![Service Log](./images/log-loki.png)
+![Exemplar](./images/mimir-exemplar.png)
+![Trace-Log](./images/trace-log.png)
+![Trace-ServiceGrapah](./images/trace-service-graph.png)
+
 ---
 #### 1) 프로메테우스 메트릭 - Mimir 저장 환경
 
