@@ -29,7 +29,7 @@ grafana:
       - name: Loki
         type: loki
         uid: loki
-        url: http://k8s-monitoring-k8s-monitoring-loki-gateway
+        url: http://k8s-monitoring-loki-gateway
         editable: true
         jsonData:
           derivedFields:
@@ -42,7 +42,7 @@ grafana:
       - name: Tempo
         type: tempo
         uid: tempo
-        url: http://k8s-monitoring-k8s-monitoring-tempo:3100
+        url: http://k8s-monitoring-tempo.monitoring.svc:3100
         editable: true
         jsonData:
           tracesToLogsV2:
@@ -156,7 +156,7 @@ mimir-distributed:
         purge: false
 
 tempo:
-  nameOverride: "k8s-monitoring-tempo"
+#  nameOverride: "k8s-monitoring-tempo"
   tempo:
     metricsGenerator:
       enabled: true
@@ -232,9 +232,9 @@ opentelemetry-collector:
       otlphttp:
         endpoint: http://k8s-monitoring-mimir-nginx.monitoring.svc:80/otlp
       otlphttp/loki:
-        endpoint: http://k8s-monitoring-k8s-monitoring-loki-gateway.monitoring.svc:80/otlp
+        endpoint: http://k8s-monitoring-loki-gateway.monitoring.svc:80/otlp
       otlphttp/traces:
-        endpoint: http://k8s-monitoring-k8s-monitoring-tempo.monitoring.svc:4318
+        endpoint: http://k8s-monitoring-tempo.monitoring.svc:4318
     processors:
       batch: {}
       memory_limiter:
@@ -297,7 +297,7 @@ opentelemetry-collector:
     repository: "otel/opentelemetry-collector-k8s"
 
 loki:
-  nameOverride: "k8s-monitoring-loki"
+#  nameOverride: "k8s-monitoring-loki"
   deploymentMode: SimpleScalable
   loki:
     auth_enabled: false
